@@ -31,6 +31,24 @@ def read_image(path, sz=None):
         im = im.resize(sz, Image.ANTIALIAS)
     return np.asarray(im, dtype=np.uint8).flatten()
 
+# helper function for table-wise heatmap
+def background_gradient(s, m, M, cmap='PuBu', low=0, high=0):
+    rng = M - m
+    norm = matplotlib.colors.Normalize(m - (rng * low),
+                                       M + (rng * high))
+    normed = norm(s.values)
+    c = [matplotlib.colors.rgb2hex(x) for x in plt.cm.get_cmap(cmap)(normed)]
+    return ['background-color: %s' % color if not np.isnan(normed[i]) else 'background-color: #fff;color: #fff' for i, color in enumerate(c)]
+
+
+def show_heatmap(df, m=None, M=None, cmap='PuOr_r'):
+    return df.style.apply(background_gradient,
+                          cmap=cmap,
+                          m=df.min().min() if m is None else m,
+                          M=df.max().max() if M is None else M,
+                          low=0,
+                          high=0.2)
+                          
 def plot_gallery(title, images, image_shape, n_col=4, n_row=4):
     plt.figure(figsize=(2. * n_col, 2.26 * n_row))
     plt.suptitle(title, size=16)
@@ -77,11 +95,12 @@ def plot_confusion_matrix(cm, classes,
     plt.figure()
     if normalize:
         cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-        print("Normalized confusion matrix")
+        #print("Normalized confusion matrix")
     else:
-        print('Confusion matrix, without normalization')
+        #print('Confusion matrix, without normalization')
+        pass
 
-    print(cm)
+    #print(cm)
 
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
     plt.title(title)
