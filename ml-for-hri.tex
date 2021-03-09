@@ -1,6 +1,6 @@
 %!TEX program = xelatex
 
-\documentclass[compress]{beamer}
+\documentclass[compress,xcolor=table]{beamer}
 %--------------------------------------------------------------------------
 % Common packages
 %--------------------------------------------------------------------------
@@ -13,6 +13,7 @@
 \usepackage{graphicx}
 
 \usepackage{multicol}
+\usepackage{multirow}
 
 \usepackage{tabularx,ragged2e}
 \usepackage{booktabs}
@@ -53,7 +54,7 @@
 \graphicspath{{figs/}}
 
 \title{Human-Robot Interaction}
-\subtitle{Social Signal Processing}
+\subtitle{Machine Learning for HRI}
 \date{}
 \author{Séverin Lemaignan}
 \institute{{\bf Bristol Robotics Lab}\\University of the West of England}
@@ -62,168 +63,30 @@
 
 \miniframesoff
 
-\licenseframe{github.com/severin-lemaignan/lecture-hri-social-signal-processing}
+\licenseframe{github.com/severin-lemaignan/lecture-hri-ml-for-hri}
 
 {
 \setbeamercolor{background canvas}{bg=uweBlue}
 \maketitle
 }
 
-\miniframeson
-
-\section[Social signals?]{What are Social Signals?}
-
-\videoframe[0.56]{figs/tears-of-steel-extract.mp4}
-\imageframe{social-signal}
 
 \begin{frame}{In this lecture}
 
 \begin{itemize}
-    \item What/why social sigal processing?
-    \item Classification (k-nearest neighbours and Support Vector Machines)
-
-    \item Case study: emotions (aka: let's build an emotion classifier from
-        scratch)
+    \item Build your own emotion classifier from scratch!
+    \item Basic classifiers: kNNs, SVM, MLP
+    \item What does the state-of-art look like? Deep graph nets, GANs, Attention
+        nets
+    \item Learning complex social behaviours
 
 \end{itemize}
 
 \end{frame}
 
+\miniframeson
 
-
-{
-    \paper{Burgoon, Magnenat-Thalmann, Pantic, Vinciarelli, {\bf Social Signal Processing}, 2017}
-
-\begin{frame}{What are social signals?}
-
-
-    \begin{itemize}
-        \item<1-> Social signals are \emph{observable} behaviours that people
-            display during social interactions
-        \item<2-> Social signals from an individual \emph{produces changes} in others
-            (like creating a belief about the person, generating an appropriate social
-            response, perform an actions)
-        \item<3-> the changes are not random, they follow \emph{principles and
-            laws} (in particular, \emph{social norms})
-
-    \end{itemize}
-
-\end{frame}
-}
-
-\begin{frame}[plain]
-\centering
-        \resizebox{!}{0.9\paperheight}{%
-            \begin{tikzpicture}[
-                    >=latex,
-                every edge/.style={<-, draw, very thick}]
-        
-
-            \path[small mindmap, 
-                level 1 concept/.append style={sibling angle=90}, 
-                level 2 concept/.append style={sibling angle=60}, 
-            concept color=white,text=hriWarmGreyDark]
-            node[concept, visible on=<1-3>] {\bf Social\\Signals...}
-            [clockwise from=0]
-            child[concept color=hriSec2] { node[concept] (percept){...on the face}
-                [clockwise from=30]
-                child[concept color=hriSec3Dark,text=white] { node[concept]
-                (emotions) {Emotions} }
-                child[concept color=hriSec2Dark,text=white] { node[concept] (attention) {Gaze} };
-            }
-            child[concept color=hriSec2Comp,text=white,visible on=<2->] { node[concept] (knowledge) {...from the body}
-                [counterclockwise from=-170]
-                child[concept color=hriSec1CompDark,text=white] { node[concept] (soc-rules) {Proxemics} }
-                child[concept color=hriSec3Comp,text=black] { node[concept] (soc-ctxt) {Body posture} }
-                child[concept color=hriSec2,text=black] { node[concept]
-                (soc-ctxt) {Motion} }
-                child[concept color=hriSec2Dark,text=white] { node[concept] (memory) {Gestures} };
-            }
-            child[concept color=hriSec3Comp,text=black,visible on=<3->] { node[concept] (comm) {...in the voice} 
-                [counterclockwise from=90]
-                child[concept color=hriSec1CompDark,text=white] { node[concept] (dialog) {Prosody} }
-                child[concept color=hriSec3,text=white] { node[concept] (dialog) {Verbal communication} }
-                child[concept color=hriSec1Dark,text=white] { node[concept] (non-verbal) {Non-verbal} };
-            };
-
-
-        \end{tikzpicture}
-    }
-\end{frame}
-
-
-\begin{frame}{Why?}
-
-    The ability to recognize human social signals and social behaviours like turn
-    taking, politeness, and disagreement is essential when building social
-    robots, human-robot interaction, or interactive systems
-
-\pause
-
-    \begin{exampleblock}{3 main problems}
-
-    \begin{itemize}
-        \item \emph{Modeling}: identification of the principles and laws
-        \item \emph{Analysis}: automatic detection and interpretation
-        \item \emph{Synthesis}: automatic generation of artificial social
-            signals
-    \end{itemize}
-
-    \end{exampleblock}
-\end{frame}
-
-\begin{frame}{How hard?}
-
-    In order to understand ``what's going on?'' (\emph{classification}), we
-    first need to build \emph{representations} by the mean of raw data
-    pre-processing (\emph{conditionning}). This typically relies on
-    \emph{models} (skeletons, language, eye, etc.)
-
-    \begin{center}
-        \includegraphics[width=0.9\linewidth]{pinsoro-kinematics/clips}
-    \end{center}
-
-\end{frame}
-
-\videoframe[0.56]{figs/pinsoro-kinematics/clip_skel_01.mp4}
-
-\videoframe[0.56]{figs/pinsoro-kinematics/clip_01.mp4}
-
-\videoframe[0.56]{figs/pinsoro-kinematics/clip_skel_05.mp4}
-
-\videoframe[0.56]{figs/pinsoro-kinematics/clip_05.mp4}
-
-
-\begin{frame}{How hard?}
-
-    Building the right representation is hard, especially for multi-modal social
-    signals (essentially, an open research
-    question).
-
-    \pause
-
-Social signal processing is typically broken down in smaller, more manageable,
-    tasks:
-
-\begin{itemize}
-
-\item People detection
-\item Face detection
-\item Face recognition
-\item Gesture recognition
-\item Gaze detection
-\item Facial expression reading (wink, blink, talking, \ldots{})
-\item Detection of social signals from verbal communication
-\item Emotion recognition (from faces, movement, speech, \ldots{})
-\item \ldots{}
-\end{itemize}
-
-\end{frame}
-
-\imageframe{ros4hri-pipeline}
-
-
-\section{Case study: emotions}
+\section{An emotions classifier}
 
 \begin{frame}{Paul Ekman and basic emotions}
 
@@ -247,6 +110,12 @@ world all recognised six \textbf{basic emotions}.
 
 Some other emotion are less universally recognised, e.g.~contempt.
 
+\pause 
+In 1990 Ekman extended his list of basic emotion to include other
+emotions: \emph{Amusement, contempt, contentment, embarrassment, excitement, guilt,
+  pride in achievement, relief, satisfaction, sensory pleasure, and
+    shame}
+
 \pause
 
 \Large
@@ -255,8 +124,152 @@ How can we process this social signal?
 \end{frame}
 
 
-
-
+%
+%
+%\begin{frame}{How to represent emotions?}
+%
+%\only<1-4>{
+%    Several approaches (or {\bf models}):
+%}
+%
+%\only<1-2>{
+%ON/OFF approach to basic emotions:
+%
+%\begin{itemize}
+%
+%\item Anger : ON/OFF
+%\item Disgust : ON/OFF
+%\item Fear : ON/OFF
+%\item Happiness : ON/OFF
+%\item Sadness : ON/OFF
+%\item Surprise : ON/OFF
+%\end{itemize}
+%
+%Why is this a poor approach to representing emotion?
+%
+%\pause
+%
+%$\Rightarrow$ no representation of gradual emotions; all is just ``on'' or
+%``off''
+%}
+%\only<3-4>{
+%
+%
+%Gradual representation of emotion would be better:
+%
+%\begin{itemize}
+%
+%\item Anger : {[}0; 1{]}
+%\item Disgust : {[}0; 1{]}
+%\item Fear : {[}0; 1{]}
+%\item Happiness : {[}0; 1{]}
+%\item Sadness : {[}0; 1{]}
+%\item Surprise : {[}0; 1{]}
+%\end{itemize}
+%
+%What is the problem with this representation?
+%
+%\onslide<4>
+%$\Rightarrow$ can lead to contradicting emotion representation, for example
+%Happiness = 1 and Sadness = 1.
+%}
+%
+%
+%    \only<5>{
+%    $\Rightarrow$ continuous representations of emotions in space
+%}
+%\end{frame}
+%
+%{
+%    \paper{Russell J. {\bf A circumplex model of affect} 1980}
+%\begin{frame}{Circumplex model}
+%
+%Two-dimensional space (\textbf{arousal} and \textbf{valence} on x and y
+%dimensions)
+%
+%\begin{itemize}
+%
+%\item emotions are noted on circumference of the circle.
+%\item middle of circle (0,0) is \textbf{neutral}
+%\item the further from the centre, the stronger the emotion.
+%\end{itemize}
+%
+%    \begin{center}
+%        \includegraphics[width=0.55\linewidth]{circumplex}
+%        \source{http://www.ncbi.nlm.nih.gov/pmc/articles/PMC2367156/}{Posner
+%et al., 2005}
+%    \end{center}
+%\end{frame}
+%}
+%
+%{
+%    \paper{Mollahosseini et al. {\bf Affectnet: A database for facial
+%    expression, valence, and arousal computing in the wild} 2017}
+%\begin{frame}{Circumplex model}
+%    \begin{center}
+%        \includegraphics[width=0.65\linewidth]{AffectNet_circumplex.png}
+%    \end{center}
+%\end{frame}
+%}
+%
+%
+%\begin{frame}{P-A-D model}
+%
+%By Albert Mehrabian and James A. Russell (1974)
+%
+%Three-dimensional representation of emotion.
+%
+%\begin{itemize}
+%
+%\item \textbf{Pleasure, Arousal and Dominance}.
+%\item Most used model in robotics and Human-Machine Interaction
+%\end{itemize}
+%
+%\pause
+%
+%\textbf{Pleasure}: how pleasant is an emotion. Anger and fear are
+%unpleasant emotions, and score low on the pleasure scale. Joy is a
+%pleasant emotion.
+%
+%\pause
+%
+%\textbf{Arousal}: intensity of an emotion. Anger and rage are unpleasant
+%emotions, but rage has a higher intensity or a higher arousal state.
+%However boredom, which is also an unpleasant state, has a low arousal
+%value.
+%
+%\pause
+%
+%\textbf{Dominance}: controlling and dominant nature of the emotion. For
+%instance while both fear and anger are unpleasant emotions, anger is a
+%dominant emotion, while fear is a submissive emotion.
+%
+%\end{frame}
+%
+%{
+%    \paper{H. Hoffmann, A Scheck, T. Schuster, H. Kessler {\bf Mapping discrete
+%    emotions into the dimensional space: An empirical approach} 2012}
+%\begin{frame}{PAD model}
+%
+%    \begin{columns}
+%        \begin{column}{0.5\linewidth}
+%    \begin{center}
+%        \includegraphics[width=\linewidth]{pad}
+%    \end{center}
+%
+%
+%        \end{column}
+%        \begin{column}{0.5\linewidth}
+%        \begin{center}
+%            \includegraphics[width=\linewidth]{pad-mapping}
+%        \end{center}
+%        \end{column}
+%    \end{columns}
+%
+%\end{frame}
+%}
+%
+%
 
 
 \section{Classification}
@@ -396,7 +409,7 @@ Examples:
 
 \end{frame}
 
-\begin{frame}{Two classification methods}
+\begin{frame}{Three classification methods}
 
 Two methods will be explained here:
 
@@ -404,18 +417,21 @@ Two methods will be explained here:
 
 \item $k$-nearest Neighbours (kNN)
 \item Support Vector Machines (SVM)
+\item Multi-layer perceptrons (MLP)
 \end{itemize}
 
-But there are hundreds of classifiers
+But there are many other classifiers:
 
 \begin{itemize}
 
-\item Decision trees
-\item Random forest
+\item Decision trees/Random forest
 \item Bayes classifiers
-\item Neural Networks
+\item The large family of neural networks (MLP is the simplest one)
 \item \ldots{}
 \end{itemize}
+
+    \href{https://scikit-learn.org/stable/auto_examples/classification/plot_classifier_comparison.html}{Comparison
+    of classifiers with scikit-learn}
 
 \end{frame}
 
@@ -564,7 +580,7 @@ print(predictions)
 
     \item<+-> might struggle with very large datasets, as it needs to calculate the
     distance to all training data every time you classify a new observation
-    (some work around are available, relying on approximate distances and
+    (workarounds exist, relying on approximate distances and
     optimisation of the algorithmic code)
 
     \item<+-> commonly, the neighbours are weighted with the inverse of the
@@ -1204,81 +1220,14 @@ $\rightarrow$ Used to find patterns in the data.
 \imageframe[color=black]{emotions/emotions_dataset_aligned}
 
 
-\begin{frame}{Features: Facial Action Units}
-
-    \newcommand{\au}[1]{
-        \includegraphics[width=2cm]{emotions/au/au-0####1.jpg}
-    }
-
-    \begin{columns}
-        \begin{column}{0.5\linewidth}
-            \begin{center}
-
-                \scriptsize
-                \begin{tabular}{@{}p{0.3cm}p{2.5cm}p{2cm}@{}}
-                    \toprule
-                    \textbf{AU} & \textbf{Description} & \textbf{Example image} \\
-                    \midrule
-                    \only<1>{
-                        \textbf{1}  & Inner Brow Raiser    &  \au{01} \\
-                    \textbf{2}  & Outer Brow Raiser    &  \au{02} \\
-                    \textbf{4}  & Brow Lowerer         &  \au{04} \\
-                    \textbf{5}  & Upper Lid Raiser     &  \au{05} \\
-                    \textbf{6}  & Cheek Raiser         &  \au{06} \\
-                    \bottomrule
-                }
-                    \only<2>{
-                        \textbf{15} & Lip Corner Depressor &  \au{15} \\
-                    \textbf{17} & Chin Raiser          &  \au{17} \\
-                    \textbf{20} & Lip stretcher        &  \au{20} \\
-                    \textbf{23} & Lip Tightener        &  \au{23} \\
-                    \bottomrule
-                }
-                \end{tabular}
-            \end{center}
-
-        \end{column}
-        \begin{column}{0.5\linewidth}
-            \begin{center}
-
-                \scriptsize
-                \begin{tabular}{@{}p{0.3cm}p{2cm}p{2cm}@{}}
-                    \toprule
-                    \textbf{AU} & \textbf{Description} & \textbf{Example image} \\
-                    \midrule
-                    \only<1>{
-                        \textbf{7}  & Lid Tightener        &  \au{07} \\
-                    \textbf{9}  & Nose Wrinkler        &  \au{09} \\
-                    \textbf{10} & Upper Lip Raiser     &  \au{10} \\
-                    \textbf{12} & Lip Corner Puller    &  \au{12} \\
-                    \bottomrule
-                }
-                    \only<2>{
-                        \textbf{14} & Dimpler              &  \au{14} \\
-                    \textbf{25} & Lips part            &  \au{25} \\
-                    \textbf{26} & Jaw Drop             &  \au{26} \\
-                    \textbf{45} & Blink                &          \\
-                    \bottomrule
-                }
-                \end{tabular}
-            \end{center}
-        \end{column}
-    \end{columns}
-
-\end{frame}
-
-\begin{frame}{OpenFace Action Units}
+\begin{frame}{Action Units}
     \begin{center}
-        OpenFace is an open-source library that recognises 17 action units
-        (amongst many other things).
-
-        \href{https://github.com/TadasBaltrusaitis/OpenFace}{github.com/TadasBaltrusaitis/OpenFace}
-        \vspace{2em}
+        Our features: \textbf{action units}.
 
         \includegraphics[width=0.9\linewidth]{emotions/au-openface}
+        \vspace{2em}
+        \href{https://github.com/TadasBaltrusaitis/OpenFace}{github.com/TadasBaltrusaitis/OpenFace}
 
-        \scriptsize
-        (not to be confused with this other \href{https://github.com/cmusatyalab/openface}{CMU OpenFace})
     \end{center}
 \end{frame}
 
@@ -1307,138 +1256,80 @@ $\rightarrow$ Used to find patterns in the data.
 \end{frame}
 
 
-\begin{frame}[fragile]{Classification results, Action Units}
-    
+\begin{frame}{Classification?}
+
+    We want to train a classifier with our training dataset, and then check
+    whether the emotions in the test faces can be properly recognised.
 
     \begin{center}
-        {\bf $n$ = 17 dimensions (i.e., 17 action units)}
+        {\bf What are our options here?}
     \end{center}
 
-    \begin{columns}
-        \begin{column}{0.4\linewidth}
-    {\bf kNN}:
+    \pause
+
+    \begin{enumerate}
+        \item<+-> 'eigenfaces' (PCA) on the training dataset; then project test
+            faces +
+            kNN/SVM (\ie face recognition with 6 possible classes)
+        \item<+-> LDA instead of PCA to improve inter-class discrimination
+        \item<+-> kNN/SVM on the action units directly?
+        \item<+-> PCA, then kNN/SVM on the action units?
+        \item<+-> LDA, then kNN/SVM on the action units?
+    \end{enumerate}
+\end{frame}
+
+\begin{frame}[plain]
+    \begin{center}
+    \Large Let's open a notebook!
+    \end{center}
+\end{frame}
+
+\begin{frame}{How to improve it further?}
+
+    \begin{center}
+        Ideas?
+    \end{center}
+
+    \pause
+
     \begin{itemize}
-        \item k=1: 46.9\%
-        \item k=2: 42.2\%
-        \item k=4: 50.8\%
-        \item k=6: 46.1\%
-        \item k=9: 52.3\%
+        \item better dataset (wider range of facial expressions)
+        \item larger dataset
+        \item use the raw images directly? use the facial landmark?
+        \item different classifier $\rightarrow$ neural network (deep or not)?
     \end{itemize}
-
-    {\bf SVM}:
-
-    \begin{itemize}
-        \item kernel: rbf: 48.8\%
-        \item kernel: linear: 52.3\%
-        \item kernel: poly: 38.0\%
-    \end{itemize}
-
-    \onslide<2>{
-        \textbf{Chance}: 16.7\%
-    }
-
-        \end{column}
-        \begin{column}{0.6\linewidth}
-            \begin{pythoncode}
-from numpy import genfromtxt
-from sklearn import neighbors, svm
-
-csv_train = genfromtxt('training.csv')
-training = csv_train[:,1:-1]
-training_categories = csv_train[:,0]
-
-csv_test = genfromtxt('testing.csv')
-testing = csv_test[:,1:-1]
-testing_categories = csv_test[:,0]
-
-clf = neighbors.KNeighborsClassifier(k)
-clf.fit(training, training_categories)
-knns_predictions = clf.predict(testing)
-
-clf = svm.SVC(kernel=kernel)
-clf.fit(training, training_categories)
-svm_predictions = clf.predict(testing)
-
-            \end{pythoncode}
-        \end{column}
-    \end{columns}
 
 \end{frame}
 
 \imageframe[color=black,caption=Natural emotions are much harder]{emotions/natural-emotions-hulot}
 
+\begin{frame}{Machine learning metrics}
 
-\begin{frame}{Multi-modal social processing}
-
-    We can usually improve social signal processing by \textbf{combining several
-    modalities}.
-
-    \begin{center}
-        \audio{figs/prosody/media1.mp4}\hspace{0.3em}
-        \audio{figs/prosody/media2.mp4}\hspace{0.3em}
-        \audio{figs/prosody/media3.mp4}\hspace{0.3em}
-        \audio{figs/prosody/media4.mp4}\hspace{0.3em}
-        \audio{figs/prosody/media5.mp4}
-    \end{center}
-    \source{http://emodb.bilderbar.info/start.html}{Berlin Database of
-    Emotional Speech}
-
-    \only<2>{
-        „Sie haben es gerade hochgetragen und jetzt gehen sie wieder runter``
-    (They just carried it upstairs and now they are going down again).
+\begin{table}[]
+\begin{tabular}{llll}
+                      & \multicolumn{3}{l}{\textbf{Predicted class}} \\ \cline{2-4} 
+\multicolumn{1}{l|}{} &         & \it Class=yes        & \it Class=no        \\ \cline{3-4} 
+\multicolumn{1}{l|}{} &
+  \multicolumn{1}{l|}{\it Class=yes} &
+  \cellcolor[HTML]{9AFF99}True positive &
+  \cellcolor[HTML]{FFCCC9}False negative \\
+\multicolumn{1}{l|}{\multirow{-3}{*}{\textbf{Actual class}}} &
+  \multicolumn{1}{l|}{\it Class=no} &
+  \cellcolor[HTML]{FFCCC9}False positive &
+  \cellcolor[HTML]{9AFF99}True negative
+\end{tabular}
+\end{table}
 
 
+    \textbf{Accuracy}: $\frac{\text{correct predictions}}{\text{total
+    observations}}=\frac{TP+TN}{TP+FP+FN+TN}$
 
-    Which emotion do you recognise?
+    \textbf{Precision}: $\frac{TP}{TP+FP}$
 
+    \textbf{Recall} (eg sensitivity): $\frac{TP}{TP+FN}$
 
-    \textbf{Anger} -- \textbf{Boredom} -- \textbf{Disgust} -- \textbf{Anxiety/Fear} -- \textbf{Happiness} --
-    \textbf{Sadness} --  \textbf{Neutral}
-}
-
-    \only<3>{
-    \textbf{Prosody} is an important \emph{non-verbal} social signal.
-
-        Humans recognise emotions from prosody with approx. 80\% accuracy
-    (\textit{caveat: this is for speech spoken by actors in a recording studio})
-
-}
-
-
-\end{frame}
-
-
-
-\begin{frame}{We've barely scratched the surface!}
-
-Social signal processing is extracting relevant information from the
-social environment.
-
-Some work relatively well
-
-\begin{itemize}
-
-\item Face \textbf{detection}, voice activity detection, gender
-  classification, \ldots{}
-\end{itemize}
-
-Some work, but need improvement
-
-\begin{itemize}
-
-\item Gaze detection, basic emotion recognition, face \textbf{recognition},
-  speech recognition, \ldots{}
-\end{itemize}
-
-But still many open problems remaining
-
-\begin{itemize}
-
-\item Complex real-word affect and emotion recognition (e.g.~embarrassment,
-  pride).
-\item Speech recognition for atypical speakers (children, elderly),
-  multi-party interaction, \ldots{}
-\end{itemize}
+    \textbf{F1 score}: $2\times\frac{\text{recall} \times
+    \text{precision}}{\text{recall} + \text{precision}}$
 
 \end{frame}
 
@@ -1457,137 +1348,6 @@ But still many open problems remaining
     \end{center}
 \end{frame}
 
-
-\begin{frame}{Classification of auditory signals}
-
-    Raw signals will in most cases require pre-processing to extract
-features.
-
-The raw social signal (audio or video) requires pre-processing\bubblemark{preprocessing} to
-extract between 10 and over a 1000 \textbf{features}.
-
-\begin{itemize}
-
-    \item A raw signals contains too much data, and cannot be fed to the
-      classifier immediately.
-
-        \begin{center}
-            \includegraphics[width=0.5\linewidth]{rawaudio}
-        \end{center}
-
-    \item Pre-processing extracts feature data which is relevant for the
-  information which we are after (pitch, volume/energy, duration,
-  formant frequencies, \ldots{})
-    \item These features then form the input for the classifier.
-\end{itemize}
-
-    {\footnotesize
-For more information see, for example, Liang et al. (2005)
-\href{http://ieeexplore.ieee.org/xpls/icp.jsp?arnumber=1571239}{Feature
-analysis and extraction for audio automatic classification}, Systems,
-Man and Cybernetics, 2005 IEEE International Conference on.
-    }
-
-\bubble<2>[50][0.7][5cm]{preprocessing}{An exception to this are Convolutional Neural
-    Networks, which can deal with unprocessed data}
-
-\end{frame}
-
-\begin{frame}{Example: recognising gender from speech}
-
-Can we automatically recognise someone's gender from speech?
-
-3,168 recorded voice samples, collected from male and female speakers.
-
-\begin{itemize}
-
-\item Examples from the database: male (US), female (US), male (Scotish)
-\end{itemize}
-
-    \begin{center}
-    \audio{figs/male-us.mp4}\hspace{0.3em}
-    \audio{figs/male-scottish.mp4}\hspace{0.3em}
-    \audio{figs/female-us.mp4}
-    \end{center}
-
-
-The voice samples are pre-processed by acoustic analysis in R using the
-{\tt seewave}, {\tt warbleR} and {\tt tuneR} packages, with an analysed frequency range of
-0hz-280Hz (fundamental frequency of human speech).
-
-
-\source{https://www.kaggle.com/primaryobjects/voicegender}{data and more information}
-
-
-\end{frame}
-
-\begin{frame}{The 20 features used for gender classification}
-
-    \only<1>{
-\begin{itemize}
-
-\item \textbf{meanfreq}: mean frequency (in kHz)
-\item \textbf{sd}: standard deviation of frequency
-\item \textbf{median}: median frequency (in kHz)
-\item \textbf{Q25}: first quantile (in kHz)
-\item \textbf{Q75}: third quantile (in kHz)
-\item \textbf{IQR}: interquantile range (in kHz)
-\item \textbf{skew}: skewness (see note in specprop description)
-\item \textbf{kurt}: kurtosis (see note in specprop description)
-\item \textbf{sp.ent}: spectral entropy
-\item \textbf{sfm}: spectral flatness
-\item \textbf{mode}: mode frequency
-\item \textbf{centroid}: frequency centroid (see specprop)
-\item \textbf{peakf}: peak frequency (frequency with highest energy)
-\item \textbf{meanfun}: average of fundamental frequency measured across
-  acoustic signal
-\end{itemize}
-}
-    \only<2>{
-\begin{itemize}
-
-\item \textbf{minfun}: minimum fundamental frequency measured across
-  acoustic signal
-\item \textbf{maxfun}: maximum fundamental frequency measured across
-  acoustic signal
-\item \textbf{meandom}: average of dominant frequency measured across
-  acoustic signal
-\item \textbf{mindom}: minimum of dominant frequency measured across
-  acoustic signal
-\item \textbf{maxdom}: maximum of dominant frequency measured across
-  acoustic signal
-\item \textbf{dfrange}: range of dominant frequency measured across acoustic
-  signal
-\item \textbf{modindx}: modulation index. Calculated as the accumulated
-  absolute difference between adjacent measurements of fundamental
-  frequencies divided by the frequency range
-\end{itemize}
-}
-
-\end{frame}
-
-\begin{frame}{Example: recognising gender from speech}
-
-    \begin{center}
-        \includegraphics[width=\linewidth]{vector-gender-voice}
-    \end{center}
-\end{frame}
-
-\begin{frame}{Example: recognising gender from speech}
-
-Performance
-
-\begin{itemize}
-
-\item kNN (k = 7): 97.8\% classified correctly.
-\item SVM: 97.5\% classified correctly.
-\end{itemize}
-
-Recognising gender from speech is easy and robust.
-
-All classification algorithms can deal with this problem.
-
-\end{frame}
 
 
 \end{document}
