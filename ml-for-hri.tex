@@ -76,9 +76,9 @@
 \begin{itemize}
     \item Build your own emotion classifier from scratch!
     \item Basic classifiers: kNNs, SVM, MLP
-    \item What does the state-of-art look like? Deep graph nets, GANs, Attention
-        nets
-    \item Learning complex social behaviours
+%    \item What does the state-of-art look like? Deep graph nets, GANs, Attention
+%        nets
+    \item ML to teach a robot social behaviours
 
 \end{itemize}
 
@@ -86,7 +86,7 @@
 
 \miniframeson
 
-\section{An emotions classifier}
+\section{Emotions?}
 
 \begin{frame}{Paul Ekman and basic emotions}
 
@@ -108,19 +108,20 @@ world all recognised six \textbf{basic emotions}.
 \textbf{Anger, disgust, fear, happiness, sadness and surprise}.
 \end{center}
 
-Some other emotion are less universally recognised, e.g.~contempt.
-
 \pause 
 In 1990 Ekman extended his list of basic emotion to include other
 emotions: \emph{Amusement, contempt, contentment, embarrassment, excitement, guilt,
   pride in achievement, relief, satisfaction, sensory pleasure, and
     shame}
 
-\pause
+    \begin{exampleblock}{Attention}
+Ekman's model does not adequately reflect the real-world complexity of emotions.
+Today, we favour continuous models like valence-arousal, or
+        Pleasure-Arousal-Dominance (PAD), or discuss more general \emph{facial
+        expressions}.
 
-\Large
-\centering
-How can we process this social signal?
+\end{exampleblock}
+
 \end{frame}
 
 
@@ -411,7 +412,7 @@ Examples:
 
 \begin{frame}{Three classification methods}
 
-Two methods will be explained here:
+Three methods will be explained here:
 
 \begin{itemize}
 
@@ -420,7 +421,10 @@ Two methods will be explained here:
 \item Multi-layer perceptrons (MLP)
 \end{itemize}
 
-But there are many other classifiers:
+    {\scriptsize
+Many other classifiers are possible
+    (\href{https://scikit-learn.org/stable/auto_examples/classification/plot_classifier_comparison.html}{\scriptsize
+    Comparison of classifiers with scikit-learn}):
 
 \begin{itemize}
 
@@ -429,9 +433,11 @@ But there are many other classifiers:
 \item The large family of neural networks (MLP is the simplest one)
 \item \ldots{}
 \end{itemize}
+    }
 
-    \href{https://scikit-learn.org/stable/auto_examples/classification/plot_classifier_comparison.html}{Comparison
-    of classifiers with scikit-learn}
+    \begin{center}
+        \includegraphics[width=0.8\linewidth]{figs/sklearn-classifiers.png}
+    \end{center}
 
 \end{frame}
 
@@ -1166,6 +1172,162 @@ print(predictions)
 %
 %\end{frame}
 
+\begin{frame}{Multi-layer perceptrons (MLP)}
+
+
+    \tikzset{%
+        every neuron/.style={
+            circle,
+            draw,
+            minimum size=1cm
+        },
+        hidden/.style={
+            fill=hriSec3Dark
+        },
+        input/.style={
+            fill=hriSec2Dark
+        },
+        output/.style={
+            fill=hriSec1CompDark
+        },
+        neuron missing/.style={
+            draw=none, 
+            scale=4,
+            text height=0.333cm,
+            execute at begin node=\color{black}$\vdots$,
+            fill=none
+        },
+        }
+
+        \begin{center}
+            \resizebox{8cm}{!}{
+                \begin{tikzpicture}[x=1.5cm, y=1.5cm, >=stealth]
+
+                    \foreach \m/\l [count=\y] in {1,2,3,missing,4}
+                    \node [every neuron/.try, input, neuron \m/.try] (input-\m) at (0,2.5-\y) {};
+
+                    \foreach \m [count=\y] in {1,missing,2}
+                    \node [every neuron/.try, hidden, neuron \m/.try] (hidden-1-\m) at (3,2-\y*1.25) {};
+
+                    \foreach \m [count=\y] in {1,missing,2}
+                    \node [every neuron/.try, hidden, neuron \m/.try] (hidden-2-\m) at (5,2-\y*1.25) {};
+
+                    \foreach \m [count=\y] in {1,missing,2}
+                    \node [every neuron/.try, output, neuron \m/.try ] (output-\m) at (8,1.5-\y) {};
+%
+                    \foreach \l [count=\i] in {1,2,3,n}
+                    \draw [<-] (input-\i) -- ++(-1,0)
+                    node [above, midway] {$I_\l$};
+
+                    \foreach \l [count=\i] in {1,p}
+                    \node [above] at (hidden-1-\i.north) {$H_{1,\l}$};
+
+                    \foreach \l [count=\i] in {1,q}
+                    \node [above] at (hidden-2-\i.north) {$H_{2,\l}$};
+
+
+                    \foreach \l [count=\i] in {1,m}
+                    \draw [->] (output-\i) -- ++(1,0)
+                    node [above, midway] {$O_\l$};
+
+                    \foreach \i in {1,...,4}
+                    \foreach \j in {1,...,2}
+                    \draw [->] (input-\i) -- (hidden-1-\j)
+                    node [above, near start] {$w^1_{\i\j}$};
+
+                    \foreach \i in {1,...,2}
+                    \foreach \j in {1,...,2}
+                    \draw [->] (hidden-1-\i) -- (hidden-2-\j)
+                    node [above, near start] {$w^2_{\i\j}$};
+
+                    \foreach \i in {1,...,2}
+                    \foreach \j in {1,...,2}
+                    \draw [->] (hidden-2-\i) -- (output-\j)
+                    node [above, near start] {$w^k_{\i\j}$};
+
+                    \foreach \l [count=\x from 0] in {Input \\ layer, Hidden \\
+                    layers, Ouput \\ layer}
+                    \node [align=center, above] at (\x*4,2) {\l};
+
+                \end{tikzpicture}
+            }
+        \end{center}
+
+        \only<1>{
+        \begin{itemize}
+            \item \emph{fully connected} \emph{feed-forward} artificial neural network
+            \item one \emph{input layer}, n (n>=1) \emph{hidden layers}, one \emph{output layer}
+            \item between each layer, a non-linear \emph{activation function}
+                (often sigmoid or ReLU)
+        \end{itemize}
+    }
+
+
+    \only<2>{
+        In our case:
+        \begin{itemize}
+            \item 2 coordinates: size $n$ of the input layer: 2
+            \item 3 categories: size $m$ of the output layer: 1 (or 3 if
+                using \emph{one-hot encoding} for categories)
+            \item nb  and size of hidden layers? \textbf{hyper-parameters}. Need to be
+                determined as well! ($\rightarrow$ \emph{validation set})
+        \end{itemize}
+    }
+    \only<3>{
+        For each layer $k$: $\mathbf{x^k} = f(\mathbf{W}^T \mathbf{x^{k-1}} + b)$
+
+        \begin{itemize}
+            \item $\mathbf{x^{k-1}}$ the input vector of this layer
+            \item $\mathbf{x^k}$ the output vector
+            \item $\mathbf{W}$ the set of parameters or weights
+            \item $b$ the bias
+            \item $f$ the activation function (eg ReLU, sigmoid)
+        \end{itemize}
+    }
+    \only<4>{
+        \textbf{Training} $\Rightarrow$ finding weights $w^k_{ij}$ so that the outputs values
+        match `what we expect'.
+
+        Main algorithm: \emph{backpropagation} using \emph{gradient descent}
+    }
+
+\end{frame}
+
+\begin{frame}[fragile]{Python implementation of Multi-layer perceptrons}
+
+\begin{pythoncode}
+from numpy import genfromtxt
+
+from sklearn.neural_network import MLPClassifier
+
+csv = genfromtxt('data.csv', delimiter=',')
+data = csv[:,:2]
+categories = csv[:,2]
+
+inputs = [ [3.5,3], [1.5,3], [1.8,1.9] ]
+
+clf = MLPClassifier(hidden_layer_sizes=(4,4),
+                    activation = "relu")
+clf.fit(data, categories)
+
+predictions = clf.predict(inputs)
+print(predictions)
+
+>>>  [2.  2.  0.]
+\end{pythoncode}
+
+\end{frame}
+
+
+\begin{frame}{MLP hyper-parameters}
+    \begin{center}
+        \includegraphics[width=0.8\linewidth]{mlp}
+    \end{center}
+
+    \pause
+    MLP does not perform well on this example: not enough data to converge!
+\end{frame}
+
 
 \begin{frame}{Clustering vs classification}
 
@@ -1268,40 +1430,22 @@ $\rightarrow$ Used to find patterns in the data.
     \pause
 
     \begin{enumerate}
-        \item<+-> 'eigenfaces' (PCA) on the training dataset; then project test
-            faces +
-            kNN/SVM (\ie face recognition with 6 possible classes)
-        \item<+-> LDA instead of PCA to improve inter-class discrimination
-        \item<+-> kNN/SVM on the action units directly?
-        \item<+-> PCA, then kNN/SVM on the action units?
-        \item<+-> LDA, then kNN/SVM on the action units?
+        \item<+-> kNN/SVM/MLP on the action units directly?
+        \item<+-> PCA, then kNN/SVM/MLP on the action units?
+        \item<+-> LDA, then kNN/SVM/MLP on the action units?
+        \item<+-> Working with the (Eigen-)faces directly (eg, the pixels)?
     \end{enumerate}
 \end{frame}
 
 \begin{frame}[plain]
     \begin{center}
-    \Large Let's open a notebook!
+        {\Large Let's open a notebook!}
+    \vspace{2em}
+
+    \href{https://github.com/severin-lemaignan/lecture-hri-ml-for-hri/blob/master/dataset-emotions/Emotion 20classifier.ipynb}{(link
+    to the complete notebook)}
     \end{center}
 \end{frame}
-
-\begin{frame}{How to improve it further?}
-
-    \begin{center}
-        Ideas?
-    \end{center}
-
-    \pause
-
-    \begin{itemize}
-        \item better dataset (wider range of facial expressions)
-        \item larger dataset
-        \item use the raw images directly? use the facial landmark?
-        \item different classifier $\rightarrow$ neural network (deep or not)?
-    \end{itemize}
-
-\end{frame}
-
-\imageframe[color=black,caption=Natural emotions are much harder]{emotions/natural-emotions-hulot}
 
 \begin{frame}{Machine learning metrics}
 
@@ -1326,14 +1470,244 @@ $\rightarrow$ Used to find patterns in the data.
 
     \textbf{Precision}: $\frac{TP}{TP+FP}$
 
+        $\rightarrow$ Did we assign too many emotions to a face?
+
     \textbf{Recall} (eg sensitivity): $\frac{TP}{TP+FN}$
+
+        $\rightarrow$ Did we 'miss' many emotions that were present?
 
     \textbf{F1 score}: $2\times\frac{\text{recall} \times
     \text{precision}}{\text{recall} + \text{precision}}$
 
 \end{frame}
 
+\begin{frame}{How to improve it further?}
+
+    \begin{center}
+        Ideas?
+    \end{center}
+
+    \pause
+
+    \begin{itemize}
+        \item better dataset (wider range of facial expressions)
+        \item larger dataset
+        \item use the raw images directly? use the facial landmark?
+        \item different classifier $\rightarrow$ neural network (deep or not)?
+    \end{itemize}
+
+\end{frame}
+
+\imageframe[color=black,caption=Natural emotions are much
+harder]{emotions/natural-emotions-social}
+
+
+\section{ML for social behaviours generation}
+
+
+{
+    \paper{Ravichandar et al. \textbf{Recent Advances in Robot
+Learning from Demonstration} Annual Reviews 2019}
+\begin{frame}{Learning from Demonstration}
+    \begin{columns}
+        \begin{column}{0.5\linewidth}
+
+            \begin{itemize}
+                \item acquire new skills by learning to imitate an expert
+                \item most often used for manipulation
+                \item 3 main approaches: \emph{kinesthetic teaching},
+                    \emph{teleoperation}, \emph{visual observation}
+                \item Common algorithm: \textbf{reinforcement learning}
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\linewidth}
+            \video[0.75]{\columnwidth}{figs/generation/Kormushev-RobotLearnsToFlipPancakes.mp4?autostart&noaudio&start=6}
+
+            {\tiny\it\textbf{Video source:} Kormushev et al. 2010}
+        \end{column}
+    \end{columns}
+
+    \begin{center}
+        \includegraphics[width=0.8\linewidth]{figs/generation/types-lfd-ravichandar-2020.png}
+    \end{center}
+\end{frame}
+}
+
+
+{
+    \paper{Yang et al. {\bf Repeatable Folding Task by Humanoid Robot Worker using
+    Deep Learning} -- Robotics and Automation Letters 2017}
+\begin{frame}{Learning sequences}
+
+    \begin{center}
+    \video[0.56]{7cm}{figs/generation/ogata-deeplearning-towel-folding.mp4?autostart&noaudio&start=19}
+    \end{center}
+
+    \begin{itemize}
+        \item 2 arms, 12 DoF
+        \item Inputs: on-board 112$\times$112px camera, joint state
+        \item Training from 40 teleoperated demonstrations of $\approx$70s
+
+    \end{itemize}
+
+    Not only learning poses, but \textbf{sequences as well};    
+    \emph{Time-Delay Neural Network} (TDNN) to learn to
+    predict the next step.
+\end{frame}
+}
+
+{
+    \paper{Yang et al. \textbf{AppGAN: Generative Adversarial Networks for
+    Generating Robot Approach Behaviours [...]} RoMan 2019}
+
+\begin{frame}{Generative Adversarial Nets for behaviour generation}
+
+    Some of the most exciting recent work in using ML for robot behaviour
+    generation involve \textbf{Generative Adversarial Networks} (GANs):
+
+            \begin{center}
+                \includegraphics[width=0.6\linewidth]{figs/generation/fangkai-yang-appgan-traj.png}
+
+                \includegraphics[width=0.8\linewidth]{figs/generation/fangkai-yang-appgan.png}
+            \end{center}
+\end{frame}
+}
+
+{
+    \paper{Senft et al. \textbf{Teaching robots social autonomy from in situ
+    human guidance} Science Robotics 2019}
+
+\begin{frame}{Reinforcement learning applied to social robotics}
+
+    \begin{columns}
+        \begin{column}{0.5\linewidth}
+
+            \includegraphics[width=\linewidth]{sparc/overview}
+
+        \end{column}
+        \begin{column}{0.5\linewidth}
+            \includegraphics[width=\linewidth]{sparc/gui}
+        \end{column}
+    \end{columns}
+
+    The children plays a game about food chains; the robot learns to guide them
+    (\emph{task-specific action policy}) and encourage them (\emph{social action
+    policy})
+
+    Complex problem: 
+    $|state| = 210$ $| action\_space| = 655$
+
+\end{frame}
+
+\begin{frame}{Teacher's interface}
+    \begin{center}
+        \includegraphics[width=0.9\linewidth]{sparc/woz-gui}
+    \end{center}
+
+    The robot's teacher (an end-user: might be the actual child's teacher) has a
+    tablet interface that mirror's the child one, and add robot's teleoperation
+    and rewards.
+\end{frame}
+
+\videoframe[0.56]{figs/sparc/video.mp4?noaudio}
+
+\begin{frame}{Software architecture}
+    \begin{center}
+        \includegraphics[width=\linewidth]{figs/sparc/architecture}
+    \end{center}
+\end{frame}
+
+%\imageframe[caption={Overall performance (pre-, mid-, post-test)},scale=0.9]{sparc/perf}
+
+\begin{frame}{Learnt robot's behaviour}
+    \only<1-2>{
+        Distribution of actions for the 25 children participants:
+    }
+    \includegraphics<1>[width=0.9\linewidth]{sparc/actions-supervised}
+    \includegraphics<2>[width=0.9\linewidth]{sparc/actions}
+    \only<1-2>{
+        $\rightarrow$ the robot personalises its action policies to the child's
+        behaviour.
+    }
+
+
+    \only<3>{
+        Time between a child's successful action and a praise:
+
+        \includegraphics[width=0.9\linewidth]{sparc/social-timing}
+
+        $\rightarrow$ the robot has also learnt an appropriate 'social timing'.
+    }
+
+\end{frame}
+}
+
+{ \paper{Winkle et al. \textbf{In-Situ Learning from a Domain Expert for Real World Socially Assistive Robot Deployment} RSS 2020}
+
+\begin{frame}{Couch-to-5km: Expert-in-the-loop machine learning}
+
+    \begin{columns}
+        \begin{column}{0.5\linewidth}
+                \centering
+                \includegraphics[height=4cm]{couch25k/hri.jpg}
+        \end{column}
+        \begin{column}{0.5\linewidth}
+                \centering
+                \includegraphics[height=4cm]{couch25k/supervised.jpg}
+        \end{column}
+    \end{columns}
+
+\end{frame}
+}
+
+\begin{frame}{Couch to 5km study}
+    \begin{itemize}
+        \item 9 participants
+        \item 3 months; 27 one-hour sessions per participants
+        \item 20 input features; 11 actions (task-specific or social)
+        \item human-in-loop design and machine learning
+        \item robot evolving from full teleoperation to full task and social
+            autonomy
+    \end{itemize}
+
+\end{frame}
+
+\begin{frame}{Software architecture}
+        \centering
+        \includegraphics[width=\linewidth]{couch25k/architecture.pdf}
+
+\end{frame}
+
+{
+    \paper{Winkle et al. \textbf{In-Situ Learning from a Domain Expert for Real World Socially Assistive Robot Deployment}
+    RSS 2020}
+    \fullbackground[scale=0.9]{couch25k/finalactiondist.png}
+\begin{frame}{Learning to imitate the human expert}
+\end{frame}
+}
+{
+    \paper{Winkle et al. \textbf{In-Situ Learning from a Domain Expert for Real World Socially Assistive Robot Deployment}
+    RSS 2020}
+    \fullbackground[scale=0.9]{couch25k/fullcomp_lbmr.png}
+\begin{frame}{Learning to personalise}
+\end{frame}
+}
+
+
 \miniframesoff
+
+\begin{frame}{In this lecture}
+
+\begin{itemize}
+    \item Basic classifiers: kNNs, SVM, MLP
+    \item Build your own emotion classifier from scratch!
+%    \item What does the state-of-art look like? Deep graph nets, GANs, Attention
+%        nets
+    \item ML to teach a robot social behaviours
+
+\end{itemize}
+
+\end{frame}
 
 \begin{frame}{}
     \begin{center}
@@ -1343,7 +1717,9 @@ $\rightarrow$ Used to find patterns in the data.
         Questions:\\
         \url{severin.lemaignan@brl.ac.uk} \\[1em]
 
-        Slides:\\ \href{https://github.com/severin-lemaignan/lecture-social-signal-processing}{\small github.com/severin-lemaignan/lecture-social-signal-processing}
+        Slides:\\
+        \href{https://github.com/severin-lemaignan/lecture-hri-ml-for-hri}{\small
+        github.com/severin-lemaignan/lecture-hri-ml-for-hri}
 
     \end{center}
 \end{frame}

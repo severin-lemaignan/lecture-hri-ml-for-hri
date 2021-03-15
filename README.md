@@ -1,18 +1,16 @@
-Introduction to Social Signal Processing
-========================================
+Machine Learning for Human-Robot Interaction
+============================================
 
-Lecture slides on social signal processing for human robot interaction.
+Lecture slides on Machine Learning for HRI.
 
 - **Target audience**: MSc students
 - **License**: CC-BY-SA (ie, you can freely reuse this material, as long as you
   clearly mention Séverin Lemaignan as the original author. If you
   modify/augment these slides, you *must* share the modifications under the same
   license)
-- [Link to the PDF slides](social-signal-processing.pdf)
+- [Link to the PDF slides](ml-for-hri.pdf)
 
 
-![Screenshot 1](screenshot-1.png)
-![Screenshot 2](screenshot-2.png)
 ![Screenshot 3](screenshot-3.png)
 ![Screenshot 4](screenshot-4.png)
 
